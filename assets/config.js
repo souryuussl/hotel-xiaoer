@@ -1,4 +1,4 @@
-// 当前为离线检索模式；在线模型入口已隐藏。
+// 默认离线配置；用户可在页面右上角「配置」里添加自己的 Key。
 window.HOTEL_XIAOER_CONFIG = {
   provider: 'offline',
   baseUrl: '',
