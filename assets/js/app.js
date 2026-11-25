@@ -2,8 +2,8 @@
 (function () {
   'use strict';
 
-  // 在线模型暂时关闭；改成 true 并恢复设置入口即可重新启用。
-  const ONLINE_ENABLED = false;
+  // 在线模型入口开放，但不预置 Key；用户可在「配置」里添加自己的 Key。
+  const ONLINE_ENABLED = true;
 
   const $ = (selector) => document.querySelector(selector);
   const state = {
