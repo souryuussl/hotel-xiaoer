@@ -1,0 +1,180 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#050807">
+  <title>酒店小二 // HOTEL XIAOER</title>
+  <meta name="description" content="酒店小二：知识库驱动的酒店问答数字人，静态页面，支持本地检索与可选在线模型。">
+  <link rel="icon" href="assets/favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="assets/css/terminal.css">
+</head>
+<body>
+  <div class="scanlines" aria-hidden="true"></div>
+  <div class="vignette" aria-hidden="true"></div>
+
+  <div id="boot" class="boot">
+    <div class="boot-inner">
+      <div class="boot-brand">
+        <span class="boot-mark">小二</span>
+        <div>
+          <h1>酒店小二</h1>
+          <p>HOTEL XIAOER // KNOWLEDGE TERMINAL</p>
+        </div>
+      </div>
+      <pre class="boot-ascii" aria-hidden="true">┌──────────────────────────────┐
+│  H O T E L   X I A O E R      │
+│  knowledge-driven concierge   │
+└──────────────────────────────┘</pre>
+      <div id="boot-log" class="boot-log" aria-live="polite"></div>
+      <button id="boot-skip" class="boot-skip" type="button">[ 跳过自检 ]</button>
+    </div>
+  </div>
+
+  <div class="app">
+    <header class="topbar">
+      <div class="brand">
+        <div class="brand-mark">小二</div>
+        <div class="brand-text">
+          <h1>酒店小二</h1>
+          <p>HOTEL XIAOER // KNOWLEDGE TERMINAL</p>
+        </div>
+      </div>
+      <div class="topbar-right">
+        <div class="mode">
+          <span id="mode-dot" class="dot"></span>
+          <span id="mode-text">初始化</span>
+        </div>
+        <button id="settings-btn" class="ghost-btn" type="button">配置</button>
+      </div>
+    </header>
+
+    <main class="layout">
+      <aside class="side">
+        <section class="card avatar-card">
+          <div class="card-label">CONCIERGE // 待命</div>
+          <svg class="avatar" viewBox="0 0 220 220" role="img" aria-label="酒店小二终端头像">
+            <defs>
+              <filter id="glow">
+                <feGaussianBlur stdDeviation="2.2" result="blur"></feGaussianBlur>
+                <feMerge>
+                  <feMergeNode in="blur"></feMergeNode>
+                  <feMergeNode in="SourceGraphic"></feMergeNode>
+                </feMerge>
+              </filter>
+            </defs>
+            <rect x="26" y="26" width="168" height="168" rx="18" fill="#07120c" stroke="#39ff88" stroke-opacity=".55"></rect>
+            <path d="M56 82h108M56 140h108" stroke="#39ff88" stroke-opacity=".12"></path>
+            <path d="M82 62h56l10 14H72z" fill="#0e2418" stroke="#39ff88" stroke-opacity=".8"></path>
+            <text x="110" y="74" text-anchor="middle" fill="#39ff88" font-size="11" font-family="monospace">小二</text>
+            <g class="eyes" filter="url(#glow)">
+              <rect class="eye" x="78" y="96" width="18" height="8" rx="4" fill="#39ff88"></rect>
+              <rect class="eye" x="124" y="96" width="18" height="8" rx="4" fill="#39ff88"></rect>
+            </g>
+            <path d="M96 122q14 10 28 0" fill="none" stroke="#39ff88" stroke-width="2" stroke-linecap="round"></path>
+            <path d="M100 148l10 8 10-8 10 7-10 9-10-7-10 7-10-9z" fill="#0e2418" stroke="#ffb84d" stroke-opacity=".85"></path>
+            <text x="110" y="184" text-anchor="middle" fill="#6f9b82" font-size="9" font-family="monospace">guest service daemon</text>
+          </svg>
+          <div class="equalizer" id="eq" aria-hidden="true">
+            <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+          </div>
+          <div class="avatar-caption">知识库里有的，照实说；没有的，不瞎编。</div>
+        </section>
+
+        <section class="card kb-card">
+          <div class="card-label">KNOWLEDGE BASE</div>
+          <div id="kb-stats" class="kb-stats">加载中…</div>
+          <div id="kb-scope" class="kb-scope"></div>
+          <div id="kb-built" class="kb-built"></div>
+        </section>
+
+        <section class="card quick-card">
+          <div class="card-label">QUICK PROMPTS</div>
+          <button class="quick" type="button" data-q="你能回答什么？">你能回答什么？</button>
+          <button class="quick" type="button" data-q="酒店有哪些数字化营销渠道？">酒店有哪些数字化营销渠道？</button>
+          <button class="quick" type="button" data-q="微信公众号应该怎么运营？">微信公众号应该怎么运营？</button>
+          <button class="quick" type="button" data-q="OTA 和团购有什么区别？">OTA 和团购有什么区别？</button>
+        </section>
+
+        <div class="side-note">
+          <span class="blink">▮</span> 静态演示版 · 答案以知识库为准
+        </div>
+      </aside>
+
+      <section class="terminal">
+        <div class="terminal-head">
+          <span>guest@hotel-xiaoer:~$</span>
+          <span id="clock">--:--:--</span>
+        </div>
+
+        <div id="log" class="log" aria-live="polite"></div>
+
+        <form id="ask-form" class="ask" autocomplete="off">
+          <span class="ask-prompt">&gt;</span>
+          <textarea id="ask-input" rows="1" maxlength="500" placeholder="客官请讲……（Enter 发送，Shift+Enter 换行）"></textarea>
+          <button type="submit" class="send-btn">发送</button>
+        </form>
+
+        <div class="terminal-foot">
+          <span id="status-line">知识库加载中…</span>
+          <span>v0.1 · static build</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="settings-dialog" class="settings-dialog">
+    <div class="settings-panel">
+      <div class="settings-head">
+        <div>
+          <div class="card-label">CONFIG</div>
+          <h2>接口配置</h2>
+        </div>
+        <button id="settings-close" class="ghost-btn" type="button">关闭</button>
+      </div>
+
+      <div id="settings-warning" class="settings-warning"></div>
+
+      <label class="field">
+        <span>运行模式</span>
+        <select id="cfg-provider"></select>
+      </label>
+
+      <label class="field">
+        <span>接口地址</span>
+        <input id="cfg-base" type="url" spellcheck="false" placeholder="https://api.deepseek.com/v1">
+      </label>
+
+      <label class="field">
+        <span>模型名 / 接入点</span>
+        <input id="cfg-model" type="text" spellcheck="false" placeholder="deepseek-chat">
+      </label>
+
+      <label class="field">
+        <span>API Key</span>
+        <div class="key-row">
+          <input id="cfg-key" type="password" spellcheck="false" placeholder="只保存在本机浏览器">
+          <button id="cfg-show-key" class="ghost-btn" type="button">显示</button>
+        </div>
+      </label>
+
+      <div id="cfg-test-result" class="test-result"></div>
+
+      <div class="settings-actions">
+        <button id="cfg-test" class="ghost-btn" type="button">测试连接</button>
+        <button id="cfg-clear" class="ghost-btn danger" type="button">清除 Key</button>
+        <button id="cfg-save" class="primary-btn" type="button">保存配置</button>
+      </div>
+
+      <p class="settings-foot">
+        不上传 Key 到任何第三方，除你填写的模型接口。静态页面无法真正隐藏 Key，临时演示结束请立即撤销。
+      </p>
+    </div>
+  </dialog>
+
+  <script src="assets/config.local.js" onerror="void 0"></script>
+  <script src="assets/js/rag.js"></script>
+  <script src="assets/js/llm.js"></script>
+  <script src="assets/js/app.js"></script>
+</body>
+</html>

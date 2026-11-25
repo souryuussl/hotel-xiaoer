@@ -1,0 +1,8 @@
+assets/config.local.js
+node_modules/
+02-output/
+preview-*.png
+scripts/smoke-test.cjs
+*.log
+.DS_Store
+Thumbs.db
