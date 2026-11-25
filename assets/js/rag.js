@@ -102,6 +102,8 @@
       for (const token of tokens) {
         if (lead.includes(token)) leadBoost += Math.min(idf(index, token), 5) * 0.25;
       }
+      // 问答型知识块（首句带问号）略加权，优先给出直接答案。
+      if (leadBoost > 0 && /[？?]/.test(lead)) leadBoost += 1.2;
       score += leadBoost;
       results.push({ ...doc.chunk, score, matched, coverage });
     }
