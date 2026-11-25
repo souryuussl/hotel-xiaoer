@@ -61,20 +61,15 @@ node scripts/build-kb.mjs
 
 Key 只保存在本机浏览器的 `localStorage`，不会写进代码或仓库。
 
-### 方式 B：本地配置文件
+### 方式 B：本地配置文件（可选）
 
-复制 `assets/config.local.example.js` 为 `assets/config.local.js`，填写：
+公开页面默认不加载本地配置文件，避免线上请求不存在的文件。若确实需要，复制 `assets/config.local.example.js` 为 `assets/config.local.js`，填写后，在 `index.html` 底部脚本区临时加一行：
 
-```js
-window.HOTEL_XIAOER_CONFIG = {
-  provider: 'deepseek',
-  baseUrl: 'https://api.deepseek.com/v1',
-  model: 'deepseek-chat',
-  apiKey: '你的临时 Key'
-};
+```html
+<script src="assets/config.local.js"></script>
 ```
 
-`assets/config.local.js` 已在 `.gitignore` 中忽略，不会提交。
+该文件已在 `.gitignore` 中忽略，不会提交。线上公开页面建议直接用「方式 A」在页面里填 Key，不要把 Key 写进部署文件。
 
 ### 支持的服务商
 
