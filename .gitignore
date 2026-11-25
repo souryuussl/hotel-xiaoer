@@ -5,6 +5,7 @@ preview-*.png
 scripts/smoke-test.cjs
 scripts/test-key.mjs
 scripts/online-test.cjs
+scripts/mode-test.cjs
 preview-online.png
 *.log
 .DS_Store

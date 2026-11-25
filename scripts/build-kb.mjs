@@ -1,17 +1,34 @@
 #!/usr/bin/env node
 /**
- * 把 knowledge/source/*.md 切成适合检索的知识块，输出 assets/kb.json。
- * 只保留“可讲”的内容：导读、知识主干、专业词汇、任务实训、泰安链接。
- * 排除思考练习、参考答案、评分要点、附录、思维导图等。
+ * 把知识库切成适合检索的知识块，输出 assets/kb.json。
+ *
+ * 分区：
+ * - assistant：knowledge/source/（知识助手：课程、微信生态、AI 合规）
+ * - service：knowledge/service/（酒店客服体验：客服问答、回答模板）
+ *
+ * 排除思考练习、参考答案、评分要点、附录、目录、思维导图等。
  */
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const SOURCE_DIR = path.join(ROOT, 'knowledge', 'source');
-const MANIFEST_PATH = path.join(ROOT, 'knowledge', 'manifest.json');
 const OUT_PATH = path.join(ROOT, 'assets', 'kb.json');
+
+const PARTITIONS = [
+  {
+    key: 'assistant',
+    label: '知识助手',
+    dir: path.join(ROOT, 'knowledge', 'source'),
+    manifestPath: path.join(ROOT, 'knowledge', 'manifest.json')
+  },
+  {
+    key: 'service',
+    label: '酒店客服体验',
+    dir: path.join(ROOT, 'knowledge', 'service'),
+    manifestPath: path.join(ROOT, 'knowledge', 'service', 'manifest.json')
+  }
+];
 
 const MAX_CHARS = 620;
 const MIN_CHARS = 80;
@@ -90,6 +107,7 @@ function chunkSection(text, maxChars, minChars) {
 
 function sectionType(headings) {
   const joined = headings.join(' ');
+  if (/标准回答|话术|转人工|禁答/.test(joined)) return '客服话术';
   if (/知识主干/.test(joined)) return '知识主干';
   if (/专业词汇/.test(joined)) return '专业词汇';
   if (/任务实训|实训/.test(joined)) return '任务实训';
@@ -97,79 +115,126 @@ function sectionType(headings) {
   return '导读';
 }
 
+function walk(dir) {
+  if (!fs.existsSync(dir)) return [];
+  return fs.readdirSync(dir, { withFileTypes: true }).flatMap((entry) => {
+    const full = path.join(dir, entry.name);
+    if (entry.isDirectory()) return walk(full);
+    return [full];
+  });
+}
+
+function stripFrontMatter(raw) {
+  return raw.replace(/^---\r?\n[\s\S]*?\r?\n---\r?\n/, '');
+}
+
 function main() {
-  if (!fs.existsSync(SOURCE_DIR)) {
-    console.error('缺少 knowledge/source 目录');
-    process.exit(1);
-  }
-  const manifest = JSON.parse(fs.readFileSync(MANIFEST_PATH, 'utf8'));
-  const files = fs.readdirSync(SOURCE_DIR).filter((f) => f.toLowerCase().endsWith('.md')).sort();
   const chunks = [];
-  let fileNo = 0;
+  const manifests = {};
+  const stats = {};
 
-  for (const file of files) {
-    fileNo += 1;
-    const raw = fs.readFileSync(path.join(SOURCE_DIR, file), 'utf8');
-    const lines = raw.split(/\r?\n/);
-    let stack = [];
-    let buffer = [];
-    let sectionNo = 0;
-
-    const flush = () => {
-      const headings = stack.map((item) => item.text);
-      const body = cleanText(buffer.join('\n'));
-      buffer = [];
-      if (!body) return;
-      if (headings.length === 0) return;
-      if (BLOCK_HEADING.test(headings.join(' '))) return;
-      const parts = chunkSection(body, MAX_CHARS, MIN_CHARS);
-      if (!parts.length) return;
-      sectionNo += 1;
-      const project = headings[0] || file.replace(/\.md$/, '');
-      const taskHeading = headings.find((h) => /任务\s*[一二三四五六七八九十0-9]|项目\s*[一二三四五六七八九十0-9]/.test(h)) || project;
-      parts.forEach((part, index) => {
-        chunks.push({
-          id: `f${fileNo}-s${sectionNo}-c${index + 1}`,
-          title: headings[headings.length - 1] || project,
-          path: headings.join(' > '),
-          source: file.replace(/\.md$/, ''),
-          project,
-          task: taskHeading,
-          type: sectionType(headings),
-          text: part
-        });
-      });
-    };
-
-    for (const line of lines) {
-      const headingMatch = line.match(/^(#{1,3})\s+(.+?)\s*#*\s*$/);
-      if (headingMatch) {
-        flush();
-        const level = headingMatch[1].length;
-        const text = cleanHeading(headingMatch[2]);
-        stack = stack.filter((item) => item.level < level);
-        stack.push({ level, text });
-        continue;
-      }
-      buffer.push(line);
+  for (const partition of PARTITIONS) {
+    if (!fs.existsSync(partition.dir)) {
+      console.warn(`跳过不存在的分区：${path.relative(ROOT, partition.dir)}`);
+      continue;
     }
-    flush();
+    if (!fs.existsSync(partition.manifestPath)) {
+      console.error(`缺少分区清单：${path.relative(ROOT, partition.manifestPath)}`);
+      process.exit(1);
+    }
+    manifests[partition.key] = JSON.parse(fs.readFileSync(partition.manifestPath, 'utf8'));
+
+    const files = walk(partition.dir)
+      .filter((filePath) => filePath.toLowerCase().endsWith('.md'))
+      .filter((filePath) => {
+        const base = path.basename(filePath);
+        return !/^README\.md$/i.test(base) && !base.startsWith('_');
+      })
+      .sort();
+
+    let partitionChunks = 0;
+    let partitionChars = 0;
+    let fileNo = 0;
+
+    for (const filePath of files) {
+      fileNo += 1;
+      const relative = path.relative(partition.dir, filePath);
+      const raw = stripFrontMatter(fs.readFileSync(filePath, 'utf8'));
+      const lines = raw.split(/\r?\n/);
+      let stack = [];
+      let buffer = [];
+      let sectionNo = 0;
+
+      const flush = () => {
+        const headings = stack.map((item) => item.text);
+        const body = cleanText(buffer.join('\n'));
+        buffer = [];
+        if (!body) return;
+        if (headings.length === 0) return;
+        if (BLOCK_HEADING.test(headings.join(' '))) return;
+        const parts = chunkSection(body, MAX_CHARS, MIN_CHARS);
+        if (!parts.length) return;
+        sectionNo += 1;
+        const project = headings[0] || relative.replace(/\.md$/, '');
+        const taskHeading = headings.find((h) => /任务\s*[一二三四五六七八九十0-9]|项目\s*[一二三四五六七八九十0-9]/.test(h)) || project;
+        parts.forEach((part, index) => {
+          chunks.push({
+            id: `${partition.key}-f${fileNo}-s${sectionNo}-c${index + 1}`,
+            partition: partition.key,
+            partitionLabel: partition.label,
+            title: headings[headings.length - 1] || project,
+            path: headings.join(' > '),
+            source: relative.replace(/\.md$/, ''),
+            project,
+            task: taskHeading,
+            type: sectionType(headings),
+            text: part
+          });
+          partitionChunks += 1;
+          partitionChars += part.length;
+        });
+      };
+
+      for (const line of lines) {
+        const headingMatch = line.match(/^(#{1,3})\s+(.+?)\s*#*\s*$/);
+        if (headingMatch) {
+          flush();
+          const level = headingMatch[1].length;
+          const text = cleanHeading(headingMatch[2]);
+          stack = stack.filter((item) => item.level < level);
+          stack.push({ level, text });
+          continue;
+        }
+        buffer.push(line);
+      }
+      flush();
+    }
+
+    stats[partition.key] = {
+      label: partition.label,
+      files: files.length,
+      chunks: partitionChunks,
+      chars: partitionChars
+    };
+    console.log(`${partition.label}：${files.length} 份资料，${partitionChunks} 块，${partitionChars} 字`);
   }
+
+  const total = {
+    files: Object.values(stats).reduce((sum, item) => sum + item.files, 0),
+    chunks: Object.values(stats).reduce((sum, item) => sum + item.chunks, 0),
+    chars: Object.values(stats).reduce((sum, item) => sum + item.chars, 0)
+  };
 
   const payload = {
-    manifest,
+    manifests,
     builtAt: new Date().toISOString(),
-    stats: {
-      files: files.length,
-      chunks: chunks.length,
-      chars: chunks.reduce((sum, chunk) => sum + chunk.text.length, 0)
-    },
+    stats: { ...stats, total },
     chunks
   };
   fs.mkdirSync(path.dirname(OUT_PATH), { recursive: true });
   fs.writeFileSync(OUT_PATH, JSON.stringify(payload));
   const size = (fs.statSync(OUT_PATH).size / 1024 / 1024).toFixed(2);
-  console.log(`已生成 ${path.relative(ROOT, OUT_PATH)}：${chunks.length} 块，${payload.stats.chars} 字，${size} MB`);
+  console.log(`已生成 ${path.relative(ROOT, OUT_PATH)}：合计 ${total.chunks} 块，${total.chars} 字，${size} MB`);
 }
 
 main();

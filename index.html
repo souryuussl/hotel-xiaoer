@@ -40,6 +40,10 @@
           <p>HOTEL XIAOER // KNOWLEDGE TERMINAL</p>
         </div>
       </div>
+      <nav class="mode-switch" role="tablist" aria-label="功能切换">
+        <button id="tab-assistant" class="mode-tab active" type="button" role="tab" aria-selected="true" data-mode="assistant">知识助手</button>
+        <button id="tab-service" class="mode-tab" type="button" role="tab" aria-selected="false" data-mode="service">酒店客服体验</button>
+      </nav>
       <div class="topbar-right">
         <div class="mode">
           <span id="mode-dot" class="dot"></span>
@@ -52,7 +56,7 @@
     <main class="layout">
       <aside class="side">
         <section class="card avatar-card">
-          <div class="card-label">CONCIERGE // 待命</div>
+          <div id="avatar-label" class="card-label">CONCIERGE // 待命</div>
           <svg class="avatar" viewBox="0 0 220 220" role="img" aria-label="酒店小二终端头像">
             <defs>
               <filter id="glow">
@@ -78,7 +82,7 @@
           <div class="equalizer" id="eq" aria-hidden="true">
             <span></span><span></span><span></span><span></span><span></span><span></span><span></span>
           </div>
-          <div class="avatar-caption">知识库里有的，照实说；没有的，不瞎编。</div>
+          <div id="avatar-caption" class="avatar-caption">知识库里有的，照实说；没有的，不瞎编。</div>
         </section>
 
         <section class="card kb-card">
@@ -90,10 +94,7 @@
 
         <section class="card quick-card">
           <div class="card-label">QUICK PROMPTS</div>
-          <button class="quick" type="button" data-q="你能回答什么？">你能回答什么？</button>
-          <button class="quick" type="button" data-q="酒店有哪些数字化营销渠道？">酒店有哪些数字化营销渠道？</button>
-          <button class="quick" type="button" data-q="微信公众号应该怎么运营？">微信公众号应该怎么运营？</button>
-          <button class="quick" type="button" data-q="OTA 和团购有什么区别？">OTA 和团购有什么区别？</button>
+          <div id="quick-list" class="quick-list"></div>
         </section>
 
         <div class="side-note">
@@ -103,7 +104,7 @@
 
       <section class="terminal">
         <div class="terminal-head">
-          <span>guest@hotel-xiaoer:~$</span>
+          <span id="terminal-user">guest@hotel-xiaoer:~$</span>
           <span id="clock">--:--:--</span>
         </div>
 

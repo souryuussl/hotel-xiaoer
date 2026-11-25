@@ -202,11 +202,64 @@ body::before {
 
 .topbar {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
-  gap: 18px;
+  gap: 14px;
   padding: 8px 2px 14px;
   border-bottom: 1px solid var(--green-line);
+}
+
+.mode-switch {
+  display: flex;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--green-line);
+  background: rgba(57, 255, 136, 0.025);
+}
+
+.mode-tab {
+  padding: 7px 13px;
+  color: var(--muted);
+  background: transparent;
+  border: 1px solid transparent;
+  font: inherit;
+  font-size: 12px;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  transition: 0.16s ease;
+}
+
+.mode-tab:hover {
+  color: var(--green-soft);
+}
+
+.mode-tab.active {
+  color: #041008;
+  background: var(--green);
+  border-color: var(--green);
+  box-shadow: 0 0 14px rgba(57, 255, 136, 0.2);
+}
+
+.mode-tab[data-mode="service"].active {
+  color: #1a0f00;
+  background: var(--amber);
+  border-color: var(--amber);
+  box-shadow: 0 0 14px rgba(255, 184, 77, 0.22);
+}
+
+body.mode-service .terminal-head,
+body.mode-service .ask-prompt {
+  color: var(--amber);
+}
+
+body.mode-service .msg.assistant .msg-body {
+  border-left-color: rgba(255, 184, 77, 0.55);
+}
+
+body.mode-service .avatar-caption {
+  color: var(--amber);
+  opacity: 0.8;
 }
 
 .brand {
@@ -433,6 +486,12 @@ body.speaking .equalizer span:nth-child(4n) { animation-delay: 0.42s; }
 }
 
 .quick-card {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+}
+
+.quick-list {
   display: flex;
   flex-direction: column;
   gap: 7px;
@@ -854,6 +913,15 @@ body.speaking .equalizer span:nth-child(4n) { animation-delay: 0.42s; }
 
   .mode {
     display: none;
+  }
+
+  .mode-switch {
+    order: 3;
+    width: 100%;
+  }
+
+  .mode-tab {
+    flex: 1;
   }
 }
 
