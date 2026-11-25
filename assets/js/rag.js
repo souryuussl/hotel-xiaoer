@@ -10,7 +10,9 @@
     '怎么', '什么', '哪些', '哪个', '如何', '为何', '为什', '么样', '怎样',
     '可以', '能否', '是否', '有哪', '有什', '么区', '一个', '这个', '那个',
     '我们', '你们', '他们', '今天', '现在', '天天', '就是', '还是', '以及', '或者',
-    '应该', '需要', '请问', '一下', '帮我', '告诉', '介绍', '给我', '写一', '一段'
+    '应该', '需要', '请问', '一下', '帮我', '告诉', '介绍', '给我', '写一', '一段',
+    '店有', '店离', '店在', '店是', '店可', '店能', '店怎', '店做', '店和', '店与',
+    '些房', '些酒', '些服', '些规'
   ]);
 
   function tokenize(text) {
@@ -93,6 +95,14 @@
       const coverage = matched / tokens.length;
       if (coverage < 0.2) continue;
       if (queryText.length >= 2 && doc.chunk.text.includes(queryText)) score += 4;
+      // 题干/首句命中加权：问答型知识块通常把关键词放在第一行。
+      // 用 idf 加权，避免“酒店”这类高频词把真正的关键词淹掉。
+      const lead = doc.chunk.text.slice(0, 120).toLowerCase();
+      let leadBoost = 0;
+      for (const token of tokens) {
+        if (lead.includes(token)) leadBoost += Math.min(idf(index, token), 5) * 0.25;
+      }
+      score += leadBoost;
       results.push({ ...doc.chunk, score, matched, coverage });
     }
 

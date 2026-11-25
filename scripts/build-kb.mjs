@@ -16,7 +16,7 @@ const OUT_PATH = path.join(ROOT, 'assets', 'kb.json');
 const MAX_CHARS = 620;
 const MIN_CHARS = 80;
 
-const BLOCK_HEADING = /(参考答案|评分要点|附录|思考练习|单项选择题|判断题|简答题|案例分析题|知识总览|思维导图|封面字段|课程基本信息|学分及参考学时|教学实施与保障|授课进程|字段来源|学时校验|教学计划任务名|体例与阅读顺序|总目录|情境示例与数据声明)/;
+const BLOCK_HEADING = /(参考答案|评分要点|附录|思考练习|单项选择题|判断题|简答题|案例分析题|知识总览|思维导图|封面字段|课程基本信息|学分及参考学时|教学实施与保障|授课进程|字段来源|学时校验|教学计划任务名|体例与阅读顺序|总目录|目录|情境示例与数据声明)/;
 
 function cleanHeading(text) {
   return text

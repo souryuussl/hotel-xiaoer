@@ -28,6 +28,16 @@ jobs:
         run: |
           mkdir -p dist
           cp -r index.html assets .nojekyll dist/
+      - name: Inject temporary runtime config
+        env:
+          RUNTIME_CONFIG_JS: ${{ secrets.RUNTIME_CONFIG_JS }}
+        run: |
+          if [ -n "$RUNTIME_CONFIG_JS" ]; then
+            printf '%s' "$RUNTIME_CONFIG_JS" > dist/assets/config.js
+            echo "Injected runtime config from repository secret."
+          else
+            echo "No RUNTIME_CONFIG_JS secret; using offline defaults."
+          fi
       - uses: actions/configure-pages@v5
         with:
           enablement: true

@@ -3,6 +3,9 @@ node_modules/
 02-output/
 preview-*.png
 scripts/smoke-test.cjs
+scripts/test-key.mjs
+scripts/online-test.cjs
+preview-online.png
 *.log
 .DS_Store
 Thumbs.db
