@@ -1,2 +1,7 @@
-// 默认运行时配置；GitHub Actions 会用仓库 Secret 覆盖 dist/assets/config.js。
-window.HOTEL_XIAOER_CONFIG = window.HOTEL_XIAOER_CONFIG || {};
+// 当前为离线检索模式；在线模型入口已隐藏。
+window.HOTEL_XIAOER_CONFIG = {
+  provider: 'offline',
+  baseUrl: '',
+  model: '',
+  apiKey: ''
+};

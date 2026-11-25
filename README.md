@@ -10,9 +10,7 @@
 
 - 黑客终端 UI：启动自检、CRT 扫描线、荧光绿、打字机输出、ASCII/SVG 店小二头像。
 - 知识库检索：浏览器端中文 BM25 + 字符二元组，取最相关的 5 段，答案带出处。
-- 两种模式：
-  - **离线检索**：不需要 Key，直接展示知识库原文摘录，断网也能用。
-  - **在线回答**：在「配置」里填接口和 Key，由大模型基于检索结果组织答案。
+- 当前运行模式：**离线检索**。不需要 Key，直接展示知识库原文摘录，断网也能用；在线大模型入口暂时隐藏。
 - 知识库：1787 个知识块，约 74.6 万字，来自：
   - 项目一《认知与基础》
   - 项目二《策划与设计》
@@ -53,51 +51,22 @@ node scripts/build-kb.mjs
 
 ---
 
-## 三、配置在线模型（可选）
+## 三、在线模型（当前关闭）
 
-### 方式 A：页面里填（推荐）
+当前版本已关闭在线模型：
 
-1. 点右上角「配置」。
-2. 选择服务商，填接口地址、模型名、API Key。
-3. 点「测试连接」，成功后保存。
+- `assets/js/app.js` 里 `ONLINE_ENABLED = false`；
+- 右上角「配置」按钮和设置弹窗已隐藏；
+- 页面只做本地知识库检索，不调用任何外部接口，也不需要 Key。
 
-Key 只保存在本机浏览器的 `localStorage`，不会写进代码或仓库。
+以后需要恢复在线回答时：
 
-### 方式 B：本地配置文件（可选）
+1. 把 `ONLINE_ENABLED` 改成 `true`；
+2. 去掉 `index.html` 里 `settings-btn` 和 `settings-dialog` 的 `hidden` 属性；
+3. 在页面「配置」里填服务商、模型和临时 Key，或恢复 GitHub Secret 注入；
+4. 重新构建并推送。
 
-公开页面默认不加载本地配置文件，避免线上请求不存在的文件。若确实需要，复制 `assets/config.local.example.js` 为 `assets/config.local.js`，填写后，在 `index.html` 底部脚本区临时加一行：
-
-```html
-<script src="assets/config.local.js"></script>
-```
-
-该文件已在 `.gitignore` 中忽略，不会提交。线上公开页面建议直接用「方式 A」在页面里填 Key，不要把 Key 写进部署文件。
-
-### 方式 C：线上临时演示（GitHub Secret 注入）
-
-适合“明天演示，演示完撤销”的临时场景：
-
-1. 在本地 `assets/config.local.js` 填好临时 Key；
-2. 把整段配置写入 GitHub 仓库 Secret：
-
-```bash
-gh secret set RUNTIME_CONFIG_JS --body "$(cat assets/config.local.js)"
-```
-
-3. 推送 `main` 后，`.github/workflows/pages.yml` 会把 Secret 写进 `dist/assets/config.js`，线上页面自动进入在线模式；
-4. 演示结束，删除 Secret 并重新部署：
-
-```bash
-gh secret delete RUNTIME_CONFIG_JS
-git commit --allow-empty -m "恢复离线模式"
-git push
-```
-
-5. 立刻到服务商后台撤销临时 Key。
-
-> ⚠️ 部署后的 `assets/config.js` 是公开文件，任何访问者都能看到 Key。只用于临时演示，不要用于长期运行。
-
-### 支持的服务商
+可选服务商：
 
 | 选项 | 协议 | 默认地址 | 默认模型 |
 |---|---|---|---|
@@ -107,16 +76,7 @@ git push
 | Claude（Anthropic） | Anthropic Messages | `https://api.anthropic.com` | `claude-opus-5-5` |
 | 自定义 | OpenAI 兼容 | 自己填 | 自己填 |
 
-### ⚠️ 关于 Key 的安全边界
-
-这是**纯静态页面**，没有服务端，Key 必须出现在浏览器里。它可能被查看源码、开发者工具或网络请求的人拿到。
-
-因此：
-
-- 只用**临时 Key**，演示结束立即在服务商后台撤销；
-- 不要把 Key 提交到 GitHub；
-- 不要用有余额的主账号 Key；
-- 如果以后要长期公开使用，必须加一个 Serverless 代理（Cloudflare Worker / 腾讯云函数），把 Key 放到服务端。
+> ⚠️ 纯静态页面的 Key 会暴露在浏览器里，只适合临时演示；长期使用必须加一个 Serverless 代理（Cloudflare Worker / 腾讯云函数），把 Key 放到服务端。
 
 ---
 

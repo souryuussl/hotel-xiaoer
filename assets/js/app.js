@@ -2,6 +2,9 @@
 (function () {
   'use strict';
 
+  // 在线模型暂时关闭；改成 true 并恢复设置入口即可重新启用。
+  const ONLINE_ENABLED = false;
+
   const $ = (selector) => document.querySelector(selector);
   const state = {
     kb: null,
@@ -27,7 +30,9 @@
       bootLog(`[ OK ] 知识块 ${state.kb.stats.chunks} 条 / ${state.kb.stats.chars} 字`);
       state.index = window.HotelRAG.createIndex(state.kb.chunks);
       bootLog('[ OK ] 中文检索索引已建立');
-      state.config = window.HotelLLM.loadConfig();
+      state.config = ONLINE_ENABLED
+        ? window.HotelLLM.loadConfig()
+        : { provider: 'offline', baseUrl: '', model: '', apiKey: '' };
       updateMode();
       updateKbPanel();
       welcome();
@@ -123,7 +128,7 @@
   }
 
   function updateMode() {
-    const online = window.HotelLLM.isOnline(state.config);
+    const online = ONLINE_ENABLED && window.HotelLLM.isOnline(state.config);
     const dot = $('#mode-dot');
     const text = $('#mode-text');
     dot.classList.toggle('online', online);
@@ -131,7 +136,7 @@
     text.textContent = online ? `在线 · ${state.config.model}` : '离线检索';
     $('#status-line').textContent = online
       ? `知识库 ${state.kb?.stats.chunks || 0} 条 · 模型已连接`
-      : `知识库 ${state.kb?.stats.chunks || 0} 条 · 未配置 Key，使用本地检索`;
+      : `知识库 ${state.kb?.stats.chunks || 0} 条 · 本地检索`;
   }
 
   function updateKbPanel() {
@@ -401,7 +406,7 @@
       return;
     }
 
-    if (!window.HotelLLM.isOnline(state.config)) {
+    if (!ONLINE_ENABLED || !window.HotelLLM.isOnline(state.config)) {
       retrievalAnswer(results);
       endBusy();
       return;
@@ -438,6 +443,7 @@
   }
 
   function openSettings() {
+    if (!ONLINE_ENABLED) return;
     const config = state.config || window.HotelLLM.loadConfig();
     const provider = config.provider || 'offline';
     const select = $('#cfg-provider');

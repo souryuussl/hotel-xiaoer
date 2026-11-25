@@ -126,7 +126,9 @@
   function plainText(text) {
     return String(text || '')
       .replace(/^#{1,6}\s+/gm, '')
+      .replace(/^\s*>\s?/gm, '')
       .replace(/\*\*/g, '')
+      .replace(/`/g, '')
       .replace(/<[^>]+>/g, '')
       .replace(/^\s*\|?[\s:|-]{3,}\|[\s:|-]*$/gm, '')
       .replace(/^\s*\|(.+)\|\s*$/gm, (_, cells) => {
